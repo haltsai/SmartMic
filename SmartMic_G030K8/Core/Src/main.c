@@ -171,15 +171,17 @@ int main(void)
 
   //Init SW3/SW4 LED and LED9
   if(1) {
-      LED9      = signle_LED_rgb_G;
+      u8PresetLED = 1;
 
-      SW3_LED21 = signle_LED_rgb_G;
-      SW3_LED19 = signle_LED_rgb_G;
-      SW3_LED20 = signle_LED_rgb_G;
+      LED9        = signle_LED_rgb_G;
 
-      SW4_LED18 = signle_LED_rgb_G;
-      SW4_LED16 = signle_LED_rgb_G;
-      SW4_LED15 = signle_LED_rgb_G;
+      SW3_LED21   = signle_LED_rgb_G;
+      SW3_LED19   = signle_LED_rgb_G;
+      SW3_LED20   = signle_LED_rgb_G;
+
+      SW4_LED18   = signle_LED_rgb_G;
+      SW4_LED16   = signle_LED_rgb_G;
+      SW4_LED15   = signle_LED_rgb_G;
   }
 
   printf("Init Done\r\n");
@@ -189,41 +191,41 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    //Follow systick 1ms
-    if(uwTick_Private != uwTick) {
-        uwTick_Private++;
+      //Follow systick 1ms
+      if(uwTick_Private != uwTick) {
+          uwTick_Private++;
 
-        Polling_Task_1ms();
+          Polling_Task_1ms();
 
-        uwTick_10ms++;
-        if(uwTick_10ms>=10) {
-            uwTick_10ms = 0;
+          uwTick_10ms++;
+          if(uwTick_10ms>=10) {
+              uwTick_10ms = 0;
 
-            Polling_Task_10ms();
-        }
+              Polling_Task_10ms();
+          }
 
-        uwTick_50ms++;
-        if(uwTick_50ms>=50) {
-            uwTick_50ms = 0;
+          uwTick_50ms++;
+          if(uwTick_50ms>=50) {
+              uwTick_50ms = 0;
 
-            Polling_Task_50ms();
-        }
+              Polling_Task_50ms();
+          }
 
-        uwTick_100ms++;
-        if(uwTick_100ms>=100) {
-            uwTick_100ms = 0;
+          uwTick_100ms++;
+          if(uwTick_100ms>=100) {
+              uwTick_100ms = 0;
 
-            Polling_Task_100ms();
-        }
+              Polling_Task_100ms();
+          }
 
-        uwTick_1s++;
-        if(uwTick_1s>=1000) {
-            uwTick_1s = 0;
+          uwTick_1s++;
+          if(uwTick_1s>=1000) {
+              uwTick_1s = 0;
 
-            Polling_Task_1s();
-        }
+              Polling_Task_1s();
+          }
 
-    }
+      }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -615,9 +617,9 @@ static void MX_GPIO_Init(void)
     }
 
     if(1) {
-        //#define Presets_Switch       GPIOA,GPIO_PIN_13
-        //#define Presets_Switch_port  GPIOA
-        //#define Presets_Switch_pin   GPIO_PIN_13
+        #define Presets_Switch       GPIOC,GPIO_PIN_14
+        #define Presets_Switch_port  GPIOC
+        #define Presets_Switch_pin   GPIO_PIN_14
 
         #define Pattern_Switch       GPIOC,GPIO_PIN_6
         #define Pattern_Switch_port  GPIOC
@@ -641,12 +643,12 @@ static void MX_GPIO_Init(void)
         __HAL_RCC_GPIOC_CLK_ENABLE();
 
         /* Configure Button pin */
-        GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
+        GPIO_InitStruct.Pull  = GPIO_NOPULL;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 
         /*Configure GPIO pin : Mic_Mute_Pin */
-        //GPIO_InitStruct.Pin  = Presets_Switch_pin; HAL_GPIO_Init(Presets_Switch_port, &GPIO_InitStruct);
+        GPIO_InitStruct.Pin  = Presets_Switch_pin; HAL_GPIO_Init(Presets_Switch_port, &GPIO_InitStruct);
         GPIO_InitStruct.Pin  = Pattern_Switch_pin; HAL_GPIO_Init(Pattern_Switch_port, &GPIO_InitStruct);
         GPIO_InitStruct.Pin  = Headphone_Mute_pin; HAL_GPIO_Init(Headphone_Mute_port, &GPIO_InitStruct);
         GPIO_InitStruct.Pin  = Mix_Mute_pin;       HAL_GPIO_Init(Mix_Mute_port,       &GPIO_InitStruct);
@@ -695,8 +697,6 @@ void Polling_Task_1ms(void) {
 void Polling_Task_10ms(void) {
     Task_LED_Driver();
     Task_ButtonGroup();
-
-    //Update GPIO_LED
     Task_Preset_LED_GPIO();
 }
 
@@ -735,6 +735,13 @@ void Task_ButtonGroup(void) {
         if(btnCNT[0]==ExecuteBTNevent) {
             btnCNT[0]=HoldOnExecuteBTN;
 
+            //Get SW2 Preset button event
+            SW2_Preset_button_ID++;
+            if(SW2_Preset_button_ID>=8) {
+                SW2_Preset_button_ID = 0;
+            }
+            u8PresetLED = 1<<SW2_Preset_button_ID;
+
         } else if(btnCNT[0]==HoldOnExecuteBTN) {
             //Don't do anything
         } else {
@@ -772,20 +779,13 @@ void Task_ButtonGroup(void) {
                 case 10: SW6_LED12 = 0;                SW6_LED10 = 0;                SW6_LED11 = 0;                break;
             }
 
-            //Get SW2 Preset button event
-            SW2_Preset_button_ID++;
-            if(SW2_Preset_button_ID>8) {
-                SW2_Preset_button_ID = 0;
-            }
-            u8PresetLED = 1<<SW2_Preset_button_ID;
-
             //Check LED9
             switch(LED9) {
-            	default:
-            	case 0:                LED9 = signle_LED_rgb_R; break;
-            	case signle_LED_rgb_R: LED9 = signle_LED_rgb_G; break;
-            	case signle_LED_rgb_G: LED9 = signle_LED_rgb_B; break;
-            	case signle_LED_rgb_B: LED9 = 0;                break;
+                default:
+                case 0:                LED9 = signle_LED_rgb_R; break;
+                case signle_LED_rgb_R: LED9 = signle_LED_rgb_G; break;
+                case signle_LED_rgb_G: LED9 = signle_LED_rgb_B; break;
+                case signle_LED_rgb_B: LED9 = 0;                break;
             }
 
         } else if(btnCNT[1]==HoldOnExecuteBTN) {
@@ -872,65 +872,65 @@ void Task_ButtonGroup(void) {
 }
 
 void VR1_PreGain(void) {
-        static uint32_t PG_VR = 0;
-        PG_VR = (PG_VR*3 + ADC_B*7)/10;
+    static uint32_t PG_VR = 0;
+    PG_VR = (PG_VR*3 + ADC_B*7)/10;
 
-               if(                  PG_VR<=s0-tor) {
-            //Seg 0
-            SW6_LED11 = signle_LED_rgb_R;
-            SW6_LED10 = signle_LED_rgb_R;
-            SW6_LED12 = signle_LED_rgb_R;
-        } else if(s0+tor<=PG_VR && PG_VR<=s1-tor) {
-            //Seg 1
-            SW6_LED11 = signle_LED_rgb_R + signle_LED_rgb_G;
-            SW6_LED10 = signle_LED_rgb_R;
-            SW6_LED12 = signle_LED_rgb_R;
-        } else if(s1+tor<=PG_VR && PG_VR<=s2-tor) {
-            //Seg 2
-            SW6_LED11 = signle_LED_rgb_G;
-            SW6_LED10 = signle_LED_rgb_R + signle_LED_rgb_G;
-            SW6_LED12 = signle_LED_rgb_R;
-        } else if(s2+tor<=PG_VR && PG_VR<=s3-tor) {
-            //Seg 3
-            SW6_LED11 = signle_LED_rgb_G;
-            SW6_LED10 = signle_LED_rgb_G;
-            SW6_LED12 = signle_LED_rgb_R + signle_LED_rgb_G;
-        } else if(s3+tor<=PG_VR && PG_VR<=s4-tor) {
-            //Seg 4
-            SW6_LED11 = signle_LED_rgb_G;
-            SW6_LED10 = signle_LED_rgb_G;
-            SW6_LED12 = signle_LED_rgb_G;
-        } else if(s4+tor<=PG_VR && PG_VR<=s5-tor) {
-            //Seg 5
-            SW6_LED11 = signle_LED_rgb_G + signle_LED_rgb_B;
-            SW6_LED10 = signle_LED_rgb_G;
-            SW6_LED12 = signle_LED_rgb_G;
-        } else if(s5+tor<=PG_VR && PG_VR<=s6-tor) {
-            //Seg 6
-            SW6_LED11 = signle_LED_rgb_B;
-            SW6_LED10 = signle_LED_rgb_G + signle_LED_rgb_B;
-            SW6_LED12 = signle_LED_rgb_G;
-        } else if(s6+tor<=PG_VR && PG_VR<=s7-tor) {
-            //Seg 7
-            SW6_LED11 = signle_LED_rgb_B;
-            SW6_LED10 = signle_LED_rgb_B;
-            SW6_LED12 = signle_LED_rgb_G + signle_LED_rgb_B;
-        } else if(s7+tor<=PG_VR && PG_VR<=s8-tor) {
-            //Seg 8
-            SW6_LED11 = signle_LED_rgb_B;
-            SW6_LED10 = signle_LED_rgb_B;
-            SW6_LED12 = signle_LED_rgb_B;
-        } else if(s8+tor<=PG_VR && PG_VR<=s9-tor) {
-            //Seg 9
-            SW6_LED11 = signle_LED_rgb_G + signle_LED_rgb_B;
-            SW6_LED10 = signle_LED_rgb_G + signle_LED_rgb_B;
-            SW6_LED12 = signle_LED_rgb_G + signle_LED_rgb_B;
-        } else if(s9+tor<=PG_VR) {
-            //Seg 10
-            SW6_LED11 = signle_LED_rgb_R + signle_LED_rgb_G + signle_LED_rgb_B;
-            SW6_LED10 = signle_LED_rgb_R + signle_LED_rgb_G + signle_LED_rgb_B;
-            SW6_LED12 = signle_LED_rgb_R + signle_LED_rgb_G + signle_LED_rgb_B;
-        }
+           if(                  PG_VR<=s0-tor) {
+        //Seg 0
+        SW6_LED11 = signle_LED_rgb_R;
+        SW6_LED10 = signle_LED_rgb_R;
+        SW6_LED12 = signle_LED_rgb_R;
+    } else if(s0+tor<=PG_VR && PG_VR<=s1-tor) {
+        //Seg 1
+        SW6_LED11 = signle_LED_rgb_R + signle_LED_rgb_G;
+        SW6_LED10 = signle_LED_rgb_R;
+        SW6_LED12 = signle_LED_rgb_R;
+    } else if(s1+tor<=PG_VR && PG_VR<=s2-tor) {
+        //Seg 2
+        SW6_LED11 = signle_LED_rgb_G;
+        SW6_LED10 = signle_LED_rgb_R + signle_LED_rgb_G;
+        SW6_LED12 = signle_LED_rgb_R;
+    } else if(s2+tor<=PG_VR && PG_VR<=s3-tor) {
+        //Seg 3
+        SW6_LED11 = signle_LED_rgb_G;
+        SW6_LED10 = signle_LED_rgb_G;
+        SW6_LED12 = signle_LED_rgb_R + signle_LED_rgb_G;
+    } else if(s3+tor<=PG_VR && PG_VR<=s4-tor) {
+        //Seg 4
+        SW6_LED11 = signle_LED_rgb_G;
+        SW6_LED10 = signle_LED_rgb_G;
+        SW6_LED12 = signle_LED_rgb_G;
+    } else if(s4+tor<=PG_VR && PG_VR<=s5-tor) {
+        //Seg 5
+        SW6_LED11 = signle_LED_rgb_G + signle_LED_rgb_B;
+        SW6_LED10 = signle_LED_rgb_G;
+        SW6_LED12 = signle_LED_rgb_G;
+    } else if(s5+tor<=PG_VR && PG_VR<=s6-tor) {
+        //Seg 6
+        SW6_LED11 = signle_LED_rgb_B;
+        SW6_LED10 = signle_LED_rgb_G + signle_LED_rgb_B;
+        SW6_LED12 = signle_LED_rgb_G;
+    } else if(s6+tor<=PG_VR && PG_VR<=s7-tor) {
+        //Seg 7
+        SW6_LED11 = signle_LED_rgb_B;
+        SW6_LED10 = signle_LED_rgb_B;
+        SW6_LED12 = signle_LED_rgb_G + signle_LED_rgb_B;
+    } else if(s7+tor<=PG_VR && PG_VR<=s8-tor) {
+        //Seg 8
+        SW6_LED11 = signle_LED_rgb_B;
+        SW6_LED10 = signle_LED_rgb_B;
+        SW6_LED12 = signle_LED_rgb_B;
+    } else if(s8+tor<=PG_VR && PG_VR<=s9-tor) {
+        //Seg 9
+        SW6_LED11 = signle_LED_rgb_G + signle_LED_rgb_B;
+        SW6_LED10 = signle_LED_rgb_G + signle_LED_rgb_B;
+        SW6_LED12 = signle_LED_rgb_G + signle_LED_rgb_B;
+    } else if(s9+tor<=PG_VR) {
+        //Seg 10
+        SW6_LED11 = signle_LED_rgb_R + signle_LED_rgb_G + signle_LED_rgb_B;
+        SW6_LED10 = signle_LED_rgb_R + signle_LED_rgb_G + signle_LED_rgb_B;
+        SW6_LED12 = signle_LED_rgb_R + signle_LED_rgb_G + signle_LED_rgb_B;
+    }
 }
 
 void VR2_Microphone(void) {
@@ -974,105 +974,105 @@ void VR2_Microphone(void) {
 }
 
 void VR3_Mix(void) {
-        static uint32_t Mix_VR = 0;
-        Mix_VR = (Mix_VR*3 + ADC_A*7)/10;
+    static uint32_t Mix_VR = 0;
+    Mix_VR = (Mix_VR*3 + ADC_A*7)/10;
 
-               if(                  Mix_VR<=s0-tor) {
-            //Seg 0
-            arrayLED[0] = 0x000;
-        } else if(s0+tor<=Mix_VR && Mix_VR<=s1-tor) {
-            //Seg 1
-            arrayLED[0] = 0x001;
-        } else if(s1+tor<=Mix_VR && Mix_VR<=s2-tor) {
-            //Seg 2
-            arrayLED[0] = 0x003;
-        } else if(s2+tor<=Mix_VR && Mix_VR<=s3-tor) {
-            //Seg 3
-            arrayLED[0] = 0x007;
-        } else if(s3+tor<=Mix_VR && Mix_VR<=s4-tor) {
-            //Seg 4
-            arrayLED[0] = 0x00F;
-        } else if(s4+tor<=Mix_VR && Mix_VR<=s5-tor) {
-            //Seg 5
-            arrayLED[0] = 0x01F;
-        } else if(s5+tor<=Mix_VR && Mix_VR<=s6-tor) {
-            //Seg 6
-            arrayLED[0] = 0x03F;
-        } else if(s6+tor<=Mix_VR && Mix_VR<=s7-tor) {
-            //Seg 7
-            arrayLED[0] = 0x07F;
-        } else if(s7+tor<=Mix_VR && Mix_VR<=s8-tor) {
-            //Seg 8
-            arrayLED[0] = 0x0FF;
-        } else if(s8+tor<=Mix_VR && Mix_VR<=s9-tor) {
-            //Seg 9
-            arrayLED[0] = 0x1FF;
-        } else if(s9+tor<=Mix_VR) {
-            //Seg 10
-            arrayLED[0] = 0x3FF;
-        }
+           if(                  Mix_VR<=s0-tor) {
+        //Seg 0
+        arrayLED[0] = 0x000;
+    } else if(s0+tor<=Mix_VR && Mix_VR<=s1-tor) {
+        //Seg 1
+        arrayLED[0] = 0x001;
+    } else if(s1+tor<=Mix_VR && Mix_VR<=s2-tor) {
+        //Seg 2
+        arrayLED[0] = 0x003;
+    } else if(s2+tor<=Mix_VR && Mix_VR<=s3-tor) {
+        //Seg 3
+        arrayLED[0] = 0x007;
+    } else if(s3+tor<=Mix_VR && Mix_VR<=s4-tor) {
+        //Seg 4
+        arrayLED[0] = 0x00F;
+    } else if(s4+tor<=Mix_VR && Mix_VR<=s5-tor) {
+        //Seg 5
+        arrayLED[0] = 0x01F;
+    } else if(s5+tor<=Mix_VR && Mix_VR<=s6-tor) {
+        //Seg 6
+        arrayLED[0] = 0x03F;
+    } else if(s6+tor<=Mix_VR && Mix_VR<=s7-tor) {
+        //Seg 7
+        arrayLED[0] = 0x07F;
+    } else if(s7+tor<=Mix_VR && Mix_VR<=s8-tor) {
+        //Seg 8
+        arrayLED[0] = 0x0FF;
+    } else if(s8+tor<=Mix_VR && Mix_VR<=s9-tor) {
+        //Seg 9
+        arrayLED[0] = 0x1FF;
+    } else if(s9+tor<=Mix_VR) {
+        //Seg 10
+        arrayLED[0] = 0x3FF;
+    }
 }
 
 void VR4_Headphone(void) {
-        static uint32_t HP_VR = 0;
-        HP_VR = (HP_VR*3 + ADC_D*7)/10;
+    static uint32_t HP_VR = 0;
+    HP_VR = (HP_VR*3 + ADC_D*7)/10;
 
-               if(                  HP_VR<=s0-tor) {
-            //Seg 0
-            SW5_LED14 = signle_LED_rgb_R;
-            SW5_LED13 = signle_LED_rgb_R;
-            SW5_LED17 = signle_LED_rgb_R;
-        } else if(s0+tor<=HP_VR && HP_VR<=s1-tor) {
-            //Seg 1
-            SW5_LED14 = signle_LED_rgb_R + signle_LED_rgb_G;
-            SW5_LED13 = signle_LED_rgb_R;
-            SW5_LED17 = signle_LED_rgb_R;
-        } else if(s1+tor<=HP_VR && HP_VR<=s2-tor) {
-            //Seg 2
-            SW5_LED14 = signle_LED_rgb_G;
-            SW5_LED13 = signle_LED_rgb_R + signle_LED_rgb_G;
-            SW5_LED17 = signle_LED_rgb_R;
-        } else if(s2+tor<=HP_VR && HP_VR<=s3-tor) {
-            //Seg 3
-            SW5_LED14 = signle_LED_rgb_G;
-            SW5_LED13 = signle_LED_rgb_G;
-            SW5_LED17 = signle_LED_rgb_R + signle_LED_rgb_G;
-        } else if(s3+tor<=HP_VR && HP_VR<=s4-tor) {
-            //Seg 4
-            SW5_LED14 = signle_LED_rgb_G;
-            SW5_LED13 = signle_LED_rgb_G;
-            SW5_LED17 = signle_LED_rgb_G;
-        } else if(s4+tor<=HP_VR && HP_VR<=s5-tor) {
-            //Seg 5
-            SW5_LED14 = signle_LED_rgb_G + signle_LED_rgb_B;
-            SW5_LED13 = signle_LED_rgb_G;
-            SW5_LED17 = signle_LED_rgb_G;
-        } else if(s5+tor<=HP_VR && HP_VR<=s6-tor) {
-            //Seg 6
-            SW5_LED14 = signle_LED_rgb_B;
-            SW5_LED13 = signle_LED_rgb_G + signle_LED_rgb_B;
-            SW5_LED17 = signle_LED_rgb_G;
-        } else if(s6+tor<=HP_VR && HP_VR<=s7-tor) {
-            //Seg 7
-            SW5_LED14 = signle_LED_rgb_B;
-            SW5_LED13 = signle_LED_rgb_B;
-            SW5_LED17 = signle_LED_rgb_G + signle_LED_rgb_B;
-        } else if(s7+tor<=HP_VR && HP_VR<=s8-tor) {
-            //Seg 8
-            SW5_LED14 = signle_LED_rgb_B;
-            SW5_LED13 = signle_LED_rgb_B;
-            SW5_LED17 = signle_LED_rgb_B;
-        } else if(s8+tor<=HP_VR && HP_VR<=s9-tor) {
-            //Seg 9
-            SW5_LED14 = signle_LED_rgb_G + signle_LED_rgb_B;
-            SW5_LED13 = signle_LED_rgb_G + signle_LED_rgb_B;
-            SW5_LED17 = signle_LED_rgb_G + signle_LED_rgb_B;
-        } else if(s9+tor<=HP_VR) {
-            //Seg 10
-            SW5_LED14 = signle_LED_rgb_R + signle_LED_rgb_G + signle_LED_rgb_B;
-            SW5_LED13 = signle_LED_rgb_R + signle_LED_rgb_G + signle_LED_rgb_B;
-            SW5_LED17 = signle_LED_rgb_R + signle_LED_rgb_G + signle_LED_rgb_B;
-        }
+           if(                  HP_VR<=s0-tor) {
+        //Seg 0
+        SW5_LED14 = signle_LED_rgb_R;
+        SW5_LED13 = signle_LED_rgb_R;
+        SW5_LED17 = signle_LED_rgb_R;
+    } else if(s0+tor<=HP_VR && HP_VR<=s1-tor) {
+        //Seg 1
+        SW5_LED14 = signle_LED_rgb_R + signle_LED_rgb_G;
+        SW5_LED13 = signle_LED_rgb_R;
+        SW5_LED17 = signle_LED_rgb_R;
+    } else if(s1+tor<=HP_VR && HP_VR<=s2-tor) {
+        //Seg 2
+        SW5_LED14 = signle_LED_rgb_G;
+        SW5_LED13 = signle_LED_rgb_R + signle_LED_rgb_G;
+        SW5_LED17 = signle_LED_rgb_R;
+    } else if(s2+tor<=HP_VR && HP_VR<=s3-tor) {
+        //Seg 3
+        SW5_LED14 = signle_LED_rgb_G;
+        SW5_LED13 = signle_LED_rgb_G;
+        SW5_LED17 = signle_LED_rgb_R + signle_LED_rgb_G;
+    } else if(s3+tor<=HP_VR && HP_VR<=s4-tor) {
+        //Seg 4
+        SW5_LED14 = signle_LED_rgb_G;
+        SW5_LED13 = signle_LED_rgb_G;
+        SW5_LED17 = signle_LED_rgb_G;
+    } else if(s4+tor<=HP_VR && HP_VR<=s5-tor) {
+        //Seg 5
+        SW5_LED14 = signle_LED_rgb_G + signle_LED_rgb_B;
+        SW5_LED13 = signle_LED_rgb_G;
+        SW5_LED17 = signle_LED_rgb_G;
+    } else if(s5+tor<=HP_VR && HP_VR<=s6-tor) {
+        //Seg 6
+        SW5_LED14 = signle_LED_rgb_B;
+        SW5_LED13 = signle_LED_rgb_G + signle_LED_rgb_B;
+        SW5_LED17 = signle_LED_rgb_G;
+    } else if(s6+tor<=HP_VR && HP_VR<=s7-tor) {
+        //Seg 7
+        SW5_LED14 = signle_LED_rgb_B;
+        SW5_LED13 = signle_LED_rgb_B;
+        SW5_LED17 = signle_LED_rgb_G + signle_LED_rgb_B;
+    } else if(s7+tor<=HP_VR && HP_VR<=s8-tor) {
+        //Seg 8
+        SW5_LED14 = signle_LED_rgb_B;
+        SW5_LED13 = signle_LED_rgb_B;
+        SW5_LED17 = signle_LED_rgb_B;
+    } else if(s8+tor<=HP_VR && HP_VR<=s9-tor) {
+        //Seg 9
+        SW5_LED14 = signle_LED_rgb_G + signle_LED_rgb_B;
+        SW5_LED13 = signle_LED_rgb_G + signle_LED_rgb_B;
+        SW5_LED17 = signle_LED_rgb_G + signle_LED_rgb_B;
+    } else if(s9+tor<=HP_VR) {
+        //Seg 10
+        SW5_LED14 = signle_LED_rgb_R + signle_LED_rgb_G + signle_LED_rgb_B;
+        SW5_LED13 = signle_LED_rgb_R + signle_LED_rgb_G + signle_LED_rgb_B;
+        SW5_LED17 = signle_LED_rgb_R + signle_LED_rgb_G + signle_LED_rgb_B;
+    }
 }
 
 void Task_Preset_LED_GPIO(void) {
@@ -1094,7 +1094,7 @@ void Task_Preset_LED_GPIO(void) {
 unsigned char Task_Button(void) {
     xu_flag xfButton = {0};
 
-    //xfButton.sb.bit0 = !HAL_GPIO_ReadPin(Presets_Switch);
+    xfButton.sb.bit0 = !HAL_GPIO_ReadPin(Presets_Switch);
     xfButton.sb.bit1 = !HAL_GPIO_ReadPin(Pattern_Switch);
     xfButton.sb.bit2 = !HAL_GPIO_ReadPin(Headphone_Mute);
     xfButton.sb.bit3 = !HAL_GPIO_ReadPin(Mix_Mute);

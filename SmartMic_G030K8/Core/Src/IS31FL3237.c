@@ -44,16 +44,6 @@ extern HAL_StatusTypeDef HAL_I2C_Master_Transmit(I2C_HandleTypeDef *hi2c, uint16
 //----------Code Implement----------
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-void delay_ms(unsigned int t) {
-    extern __IO uint32_t uwTick;
-    uint32_t delayTime = uwTick + t;
-
-    LBL_Delay_Loop:
-    if(delayTime >= uwTick) {
-        goto LBL_Delay_Loop;
-    }
-}
-/*----------------------------------------------------------------------------*/
 void Hal_LED_Driver_Initial(void) {
 
     //Configure Global power
@@ -73,9 +63,9 @@ void Hal_LED_Driver_Initial(void) {
         static const unsigned char LED_array_Power_R     = 100;  //MIN:0, MAX:255
         static const unsigned char LED_array_Power_G     = 180;  //MIN:0, MAX:255
 
-        static const unsigned char LED_Power_R           = 24;  //MIN:0, MAX:255
-        static const unsigned char LED_Power_G           =  3;  //MIN:0, MAX:255
-        static const unsigned char LED_Power_B           = 12;  //MIN:0, MAX:255
+        static const unsigned char LED_Power_R           =  24;  //MIN:0, MAX:255
+        static const unsigned char LED_Power_G           =   3;  //MIN:0, MAX:255
+        static const unsigned char LED_Power_B           =  12;  //MIN:0, MAX:255
 
         I2C_WriteByte(AD_SEL1_LOW,  Power_array_LED2_no1 , LED_array_Power_G);      //write all scaling
         I2C_WriteByte(AD_SEL1_LOW,  Power_array_LED2_no2 , LED_array_Power_G);      //write all scaling
@@ -239,7 +229,7 @@ void Hal_LED_Driver_Initial(void) {
         I2C_WriteByte(AD_SEL1_HIGH, PWM_LED21_G        , LED_Driver_PWM_Value);  //write all scaling
     }
 
-    //Set Power and PWM value and Save
+    //Save Power and PWM value
     I2C_WriteByte(AD_SEL1_LOW,  0x49, 0x00);   //update PWM & congtrol register
     I2C_WriteByte(AD_SEL1_HIGH, 0x49, 0x00);   //update PWM & congtrol register
 
@@ -458,53 +448,12 @@ void Task_LED_Driver(void) {
     }
 }
 /*----------------------------------------------------------------------------*/
-void IS31FL3237_mode1(void) {  //white LED
-    uint8_t i=0,j=0;
-
-    for(j=0; j<=63; j++)  {
-        for(i=0x01; i<=0x48; i+=2) {
-            //Configure single LED PWM value
-            I2C_WriteByte(AD_SEL1_LOW,  i, 100);      //Duty MIN:0, MAX:255
-            I2C_WriteByte(AD_SEL1_HIGH, i, 100);      //Duty MIN:0, MAX:255
-
-            //Set PWM and Power value
-            I2C_WriteByte(AD_SEL1_LOW,  0x49, 0x00);  //update PWM & congtrol registers
-            I2C_WriteByte(AD_SEL1_HIGH, 0x49, 0x00);  //update PWM & congtrol registers
-
-            delay_ms(1);  //for debug
-        }
-
-        delay_ms(10);
-    }
-}
-/*----------------------------------------------------------------------------*/
 unsigned char I2C_WriteByte(int DevAddr, unsigned char RegAddr, unsigned char u8Byte) {
-#if (0)
-    if(!I2C_Start()) {
-        return FALSE1;
-    }
-
-    I2C_SendByte(DeviceAddress & 0xFE);
-
-    if(!I2C_WaitAck()) {
-        I2C_Stop();
-        return FALSE1;
-    }
-
-    I2C_SendByte(WriteAddress);
-    I2C_WaitAck();
-
-    I2C_SendByte(SendByte);
-    I2C_WaitAck();
-
-    I2C_Stop();
-#else
     unsigned char u8Data[2] = {0};
     u8Data[0] = RegAddr;
     u8Data[1] = u8Byte;
 
     HAL_I2C_Master_Transmit(&hi2c1, DevAddr, u8Data, 2, 0xFFFFFFFF);
-#endif
 
     return TRUE;
 }

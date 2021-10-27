@@ -248,10 +248,8 @@ typedef enum {
            unsigned char SW6_LED12 = {0};
 
 
-           void delay_ms(unsigned int t);
            void Hal_LED_Driver_Initial(void);
            void Task_LED_Driver(void);
-           void IS31FL3237_mode1(void);
 
 #else
     extern unsigned short arrayLED[];
@@ -275,10 +273,8 @@ typedef enum {
     extern unsigned char SW6_LED12;
 
 
-    extern void delay_ms(unsigned int t);
     extern void Hal_LED_Driver_Initial(void);
     extern void Task_LED_Driver(void);
-    extern void IS31FL3237_mode1(void);
 
 #endif
 
